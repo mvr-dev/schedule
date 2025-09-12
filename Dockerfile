@@ -1,13 +1,15 @@
-FROM tomcat:10.1-jdk17-openjdk
+# Stage 1: Build the application with Maven
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Удаляем дефолтные приложения Tomcat
+# Stage 2: Run the application with Tomcat
+FROM tomcat:10.1-jdk17-openjdk
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Копируем наше приложение
-COPY target/ROOT.war /usr/local/tomcat/webapps/ROOT.war
+# Copy the built WAR file from builder stage
+COPY --from=builder /app/target/ROOT.war /usr/local/tomcat/webapps/ROOT.war
 
-# Открываем порт
 EXPOSE 8080
-
-# Запускаем Tomcat
 CMD ["catalina.sh", "run"]
