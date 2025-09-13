@@ -81,7 +81,7 @@ import jakarta.servlet.annotation.WebListener;
             try {
                 String text = message.getText().toLowerCase();
                 String response;
-
+                System.out.println(text);
                 // Простейшая логика ответов
                 if (text.contains("привет")) {
                     response = "Привет! 😊";
