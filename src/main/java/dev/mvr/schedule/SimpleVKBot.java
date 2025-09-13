@@ -35,8 +35,8 @@ import jakarta.servlet.annotation.WebListener;
                 VkApiClient vk = new VkApiClient(HttpTransportClient.getInstance());
 
                 // 2. Ваши данные из ВК
-                String token = "ВАШ_КЛЮЧ_ДОСТУПА"; // ← Замените на свой
-                int groupId = 123456789; // ← Замените на ID группы
+                String token = System.getenv("VK_BOT_TOKEN");
+                Integer groupId = Integer.parseInt(System.getenv("VK_GROUP_ID"));
 
                 GroupActor actor = new GroupActor(groupId, token);
                 System.out.println("✅ Бот запущен для группы ID: " + groupId);
