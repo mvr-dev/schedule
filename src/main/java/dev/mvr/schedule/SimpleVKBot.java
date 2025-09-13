@@ -37,7 +37,7 @@ public class SimpleVKBot implements ServletContextListener {
             VkApiClient vk = new VkApiClient(HttpTransportClient.getInstance());
 
             // 2. Получаем токен и ID из переменных окружения
-            String token = System.getenv("VK_TOKEN");
+            String token = System.getenv("VK_BOT_TOKEN");
             String groupId = System.getenv("VK_GROUP_ID");
 
             if (token == null || groupId == null) {
