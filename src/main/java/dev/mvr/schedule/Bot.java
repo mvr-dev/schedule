@@ -181,16 +181,47 @@ public class Bot implements ServletContextListener {
                                             .execute();
 
                             }
-                             else if (Utils.testGroup(message.getText())) {
+                             else if (Utils.testGroupOmsu(message.getText())) {
                                  var groups = studentGroup.get(message.getFromId());
                                  var group = groups.get(groups.size()-1);
-                                 group.setGroup(message.getText());
-                                vk.messages()
-                                        .send(actor)
-                                        .message("Группа добавлена")
-                                        .userId(message.getFromId())
-                                        .randomId(random.nextInt(10000))
-                                        .execute();
+                                 if (group.getUniversity().equals("ОмГУ")) {
+                                     group.setGroup(message.getText());
+                                     vk.messages()
+                                             .send(actor)
+                                             .message("Группа добавлена")
+                                             .userId(message.getFromId())
+                                             .randomId(random.nextInt(10000))
+                                             .execute();
+                                 }
+                                 else{
+                                     vk.messages()
+                                             .send(actor)
+                                             .message("Неверная группа для "+group.getUniversity())
+                                             .userId(message.getFromId())
+                                             .randomId(random.nextInt(10000))
+                                             .execute();
+                                 }
+                            }
+                             else if(Utils.testGroupOmstu(message.getText())){
+                                var groups = studentGroup.get(message.getFromId());
+                                var group = groups.get(groups.size()-1);
+                                if (group.getUniversity().equals("ОмГТУ")){
+                                    group.setGroup(message.getText());
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Группа добавлена")
+                                            .userId(message.getFromId())
+                                            .randomId(random.nextInt(10000))
+                                            .execute();
+                                }
+                                else{
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Неверная группа для "+group.getUniversity())
+                                            .userId(message.getFromId())
+                                            .randomId(random.nextInt(10000))
+                                            .execute();
+                                }
                             }
                              else if (message.getText().equals("расписание на сегодня")){
 
@@ -217,32 +248,5 @@ public class Bot implements ServletContextListener {
                 Thread.sleep(10000); // Ждем 10 сек при ошибке
             }
         }
-    }
-
-    public long getGroupIdOmsu(String group){
-
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://eservice.omsu.ru/schedule/backend/dict/groups"))
-                .timeout(Duration.ofSeconds(5))
-                .header("Content-Type", "application/json")
-                .header("User-Agent", "Java HttpClient")
-                .GET()
-                .build();
-
-        try {
-            HttpResponse<String> response = client.send(
-                    request, HttpResponse.BodyHandlers.ofString());
-
-            System.out.println("Status Code: " + response.statusCode());
-            System.out.println("Response Body: " + response.body());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 1;
     }
 }

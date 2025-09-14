@@ -494,13 +494,15 @@ public class Utils {
             );
 
 
-    public static boolean testGroup(String group){
+    public static boolean testGroupOmsu(String group){
         String regexOmSU = "^[А-ЯЁ]{3}-\\d{3}-О-\\d{2}$";
-        String regexOmSTU = "^[А-ЯЁ]{3}-\\d{3}$";
         Pattern patternOmsu = Pattern.compile(regexOmSU);
+        return patternOmsu.matcher(group.toUpperCase()).matches();
+    }
+    public static boolean testGroupOmstu(String group){
+        String regexOmSTU = "^[А-ЯЁ]{3}-\\d{3}$";
         Pattern patternOmstu = Pattern.compile(regexOmSTU);
-        return patternOmsu.matcher(group.toUpperCase()).matches()
-                || patternOmstu.matcher(group.toUpperCase()).matches();
+        return  patternOmstu.matcher(group.toUpperCase()).matches();
     }
     public static Integer groupIdOmsu(String group){
         return groupsOmsu.getOrDefault(group,-1);
