@@ -8,10 +8,16 @@ import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.*;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
+import dev.mvr.schedule.model.UniversityGroup;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.*;
 
 @WebListener
@@ -19,13 +25,13 @@ public class Bot implements ServletContextListener {
 
     private Thread botThread;
     private boolean isRunning = false;
-    private static final Map<Integer, String> userUniversity = new HashMap<>();
-    private static final Map<Integer, String> userGroup = new HashMap<>();
+    Map<Integer, List<UniversityGroup>> studentGroup = new HashMap<>();
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("🚀 Starting VK Bot...");
         isRunning = true;
+
 
         // ЗАПУСКАЕМ бота в отдельном потоке
         botThread = new Thread(() -> {
@@ -60,7 +66,7 @@ public class Bot implements ServletContextListener {
         if (token == null) {
             return;
         }
-
+//        System.out.println(groups);
         GroupActor actor = new GroupActor(groupId, token);
         // Тест подключения к VK API
         try {
@@ -71,6 +77,45 @@ public class Bot implements ServletContextListener {
 
         Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
         Random random = new Random();
+        Keyboard universityKeyboard = new Keyboard();
+        List<List<KeyboardButton>> universities = new ArrayList<>();
+        List<KeyboardButton> line1 = List.of(
+                new KeyboardButton().setAction(
+                new KeyboardButtonAction().setLabel("ОмГУ")
+                        .setType(TemplateActionTypeNames.TEXT)
+        ),
+                new KeyboardButton().setAction(
+                new KeyboardButtonAction().setLabel("ОмГТУ")
+                        .setType(TemplateActionTypeNames.TEXT)
+        ));
+        universities.add(line1);
+        universityKeyboard.setButtons(universities);
+
+        Keyboard actionsKeyboard = new Keyboard();
+        List<List<KeyboardButton>> actions = List.of(
+                List.of(
+                        new KeyboardButton().setAction(
+                                new KeyboardButtonAction().setLabel("мои данные")
+                                        .setType(TemplateActionTypeNames.TEXT)
+                        ),
+                        new KeyboardButton().setAction(
+                                new KeyboardButtonAction().setLabel("изменить университет")
+                                        .setType(TemplateActionTypeNames.TEXT)
+                        ),
+                        new KeyboardButton().setAction(
+                                new KeyboardButtonAction().setLabel("изменить группу")
+                                        .setType(TemplateActionTypeNames.TEXT)
+                        )
+                ),
+                List.of(
+                        new KeyboardButton().setAction(
+                                new KeyboardButtonAction().setLabel("расписание на сегодня")
+                                        .setType(TemplateActionTypeNames.TEXT)
+                        )
+                )
+        );
+
+
         while (isRunning) {
             try {
                 MessagesGetLongPollHistoryQuery historyQuery =
@@ -82,39 +127,73 @@ public class Bot implements ServletContextListener {
                     for (Message message : messages) {
                         if (message.getText() != null) {
                             if (message.getText().equals("Начать")) {
-                                Keyboard keyboard = new Keyboard().setOneTime(true);
-                                List<List<KeyboardButton>> allKeys = new ArrayList<>();
-                                List<KeyboardButton> line1 = new ArrayList<>();
-                                line1.add(new KeyboardButton().setAction(
-                                        new KeyboardButtonAction().setLabel("ОмГУ")
-                                                .setType(TemplateActionTypeNames.TEXT)
-                                ));
-                                line1.add(new KeyboardButton().setAction(
-                                        new KeyboardButtonAction().setLabel("ОмГТУ")
-                                                .setType(TemplateActionTypeNames.TEXT)
-                                ));
-                                allKeys.add(line1);
-                                keyboard.setButtons(allKeys);
+                                studentGroup.put(message.getFromId(),new ArrayList<>());
                                 vk.messages()
                                         .send(actor)
-                                        .message("Привет выбери университет")
+                                        .message("Привет! Выбери университет")
                                         .userId(message.getFromId())
                                         .randomId(random.nextInt(10000))
-                                        .keyboard(keyboard)
+                                        .keyboard(universityKeyboard)
                                         .execute();
                             } else if (message.getText().equals("ОмГУ")) {
-                                userUniversity.put(message.getFromId(),"ОмГУ");}
-                            else if( message.getText().equals("ОмГТУ")){
-                                userUniversity.put(message.getFromId(),"ОмГТУ");
-                            } else if (message.getText().equals("мой универ")) {
+                                studentGroup.get(message.getFromId()).add(new UniversityGroup("ОмГУ"));
                                 vk.messages()
                                         .send(actor)
-                                        .message(userUniversity.getOrDefault(message.getFromId(),"Университет не указан"))
+                                        .message("Введи номер группы (полностью)\n например: ХХБ-001-О-01")
+                                        .userId(message.getFromId())
+                                        .randomId(random.nextInt(10000))
+                                        .execute();
+                            }
+                            else if( message.getText().equals("ОмГТУ")) {
+                                studentGroup.get(message.getFromId()).add(new UniversityGroup("ОмГТУ"));
+                                vk.messages()
+                                        .send(actor)
+                                        .message("Введи номер группы")
+                                        .userId(message.getFromId())
+                                        .randomId(random.nextInt(10000))
+                                        .execute();
+                            } 
+                            else if (message.getText().equals("мой универ")) {
+                                StringBuilder sb = new StringBuilder("Твои группы:\n");
+                                for (UniversityGroup group : studentGroup.get(message.getFromId())){
+                                    sb.append(group.toString());
+                                }
+                                vk.messages()
+                                        .send(actor)
+                                        .message(sb.toString())
                                         .userId(message.getFromId())
                                         .randomId(random.nextInt(10000))
                                         .execute();
 
-                            } else {
+                            } else if (message.getText().equals("добавить группу")) {
+                                var groups = studentGroup.get(message.getFromId());
+                                var group = groups.get(groups.size()-1);
+                                if (group.getGroup()!=null)
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Выбери университет")
+                                            .userId(message.getFromId())
+                                            .randomId(random.nextInt(10000))
+                                            .keyboard(universityKeyboard)
+                                            .execute();
+                                else
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Введи номер группы")
+                                            .userId(message.getFromId())
+                                            .randomId(random.nextInt(10000))
+                                            .execute();
+
+                            }
+                             else if (Utils.testGroup(message.getText())) {
+                                 var groups = studentGroup.get(message.getFromId());
+                                 var group = groups.get(groups.size()-1);
+                                 group.setGroup(message.getText());
+                            }
+                             else if (message.getText().equals("расписание на сегодня")){
+
+                            }
+                        else {
                                 vk.messages()
                                         .send(actor)
                                         .message("Я вас не понял")
@@ -136,5 +215,32 @@ public class Bot implements ServletContextListener {
                 Thread.sleep(10000); // Ждем 10 сек при ошибке
             }
         }
+    }
+
+    public long getGroupIdOmsu(String group){
+
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://eservice.omsu.ru/schedule/backend/dict/groups"))
+                .timeout(Duration.ofSeconds(5))
+                .header("Content-Type", "application/json")
+                .header("User-Agent", "Java HttpClient")
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(
+                    request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Status Code: " + response.statusCode());
+            System.out.println("Response Body: " + response.body());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
     }
 }
