@@ -8,13 +8,25 @@ import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.Message;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
 import java.util.List;
 import java.util.Random;
 
 @WebListener
-public class Bot {
+public class Bot implements ServletContextListener {
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        ServletContextListener.super.contextInitialized(sce);
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        ServletContextListener.super.contextDestroyed(sce);
+    }
+
     public void runBot() throws ClientException, ApiException, InterruptedException {
         TransportClient transportClient = new HttpTransportClient();
         VkApiClient vk = new VkApiClient(transportClient);
