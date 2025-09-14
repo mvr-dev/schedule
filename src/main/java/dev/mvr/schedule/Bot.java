@@ -103,9 +103,9 @@ public class Bot implements ServletContextListener {
                                         .keyboard(keyboard)
                                         .execute();
                             } else if (message.getText().equals("ОмГУ")) {
-                                userGroup.put(message.getFromId(),"ОмГУ");}
+                                userUniversity.put(message.getFromId(),"ОмГУ");}
                             else if( message.getText().equals("ОмГТУ")){
-                                userGroup.put(message.getFromId(),"ОмГТУ");
+                                userUniversity.put(message.getFromId(),"ОмГТУ");
                             } else if (message.getText().equals("мой универ")) {
                                 vk.messages()
                                         .send(actor)
