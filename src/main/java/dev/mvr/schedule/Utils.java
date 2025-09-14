@@ -1,5 +1,11 @@
 package dev.mvr.schedule;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.mvr.schedule.model.OmstuGroup;
+
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -498,5 +504,11 @@ public class Utils {
     }
     public static Integer groupIdOmsu(String group){
         return groupsOmsu.getOrDefault(group,-1);
+    }
+    public static OmstuGroup getOmstuGroup(String group) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String response = RequestUtil.getOmstuGroupJson(group);
+        return  objectMapper.readValue(response, new TypeReference<List<OmstuGroup>>() {}).get(0);
+
     }
 }

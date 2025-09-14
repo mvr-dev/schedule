@@ -95,15 +95,11 @@ public class Bot implements ServletContextListener {
         List<List<KeyboardButton>> actions = List.of(
                 List.of(
                         new KeyboardButton().setAction(
-                                new KeyboardButtonAction().setLabel("мои данные")
+                                new KeyboardButtonAction().setLabel("мой универ")
                                         .setType(TemplateActionTypeNames.TEXT)
                         ),
                         new KeyboardButton().setAction(
-                                new KeyboardButtonAction().setLabel("изменить университет")
-                                        .setType(TemplateActionTypeNames.TEXT)
-                        ),
-                        new KeyboardButton().setAction(
-                                new KeyboardButtonAction().setLabel("изменить группу")
+                                new KeyboardButtonAction().setLabel("добавить группу")
                                         .setType(TemplateActionTypeNames.TEXT)
                         )
                 ),
@@ -189,6 +185,12 @@ public class Bot implements ServletContextListener {
                                  var groups = studentGroup.get(message.getFromId());
                                  var group = groups.get(groups.size()-1);
                                  group.setGroup(message.getText());
+                                vk.messages()
+                                        .send(actor)
+                                        .message("Группа добавлена")
+                                        .userId(message.getFromId())
+                                        .randomId(random.nextInt(10000))
+                                        .execute();
                             }
                              else if (message.getText().equals("расписание на сегодня")){
 
