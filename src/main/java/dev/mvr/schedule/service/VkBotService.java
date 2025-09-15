@@ -39,7 +39,7 @@ public class VkBotService implements Runnable{
             return;
         }
 
-        Integer ts = null;
+        Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
         try {
             ts = vk.messages().getLongPollServer(actor).execute().getTs();
         } catch (ApiException e) {
@@ -246,4 +246,6 @@ public class VkBotService implements Runnable{
             }
         }
     }
+
+
 }

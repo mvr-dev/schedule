@@ -22,8 +22,8 @@ public class KeepAliveServlet extends HttpServlet {
         System.out.println("🔛 Starting Keep-Alive Service...");
         scheduler = Executors.newSingleThreadScheduledExecutor();
 
-        // Пинг каждые 45 секунд
-        scheduler.scheduleAtFixedRate(this::pingServer, 0, 45, TimeUnit.SECONDS);
+        // Пинг каждые 30 секунд
+        scheduler.scheduleAtFixedRate(this::pingServer, 0, 30, TimeUnit.SECONDS);
     }
 
     @Override
