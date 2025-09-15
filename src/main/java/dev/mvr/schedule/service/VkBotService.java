@@ -39,7 +39,14 @@ public class VkBotService implements Runnable{
             return;
         }
 
-        Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
+        try {
+            Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        } catch (ClientException e) {
+            throw new RuntimeException(e);
+        }
+        Integer ts;
         try {
             ts = vk.messages().getLongPollServer(actor).execute().getTs();
         } catch (ApiException e) {
