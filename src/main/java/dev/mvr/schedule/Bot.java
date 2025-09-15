@@ -19,6 +19,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @WebListener
 public class Bot implements ServletContextListener {
@@ -26,11 +29,14 @@ public class Bot implements ServletContextListener {
     private Thread botThread;
     private boolean isRunning = false;
     Map<Integer, List<UniversityGroup>> studentGroup = new HashMap<>();
+    private ScheduledExecutorService scheduler;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("🚀 Starting VK Bot...");
         isRunning = true;
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::keepAlivePing, 0, 45, TimeUnit.SECONDS);
 
 
         // ЗАПУСКАЕМ бота в отдельном потоке
@@ -46,10 +52,34 @@ public class Bot implements ServletContextListener {
         System.out.println("✅ Bot thread started");
     }
 
+    private void keepAlivePing() {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create("https://schedule-derw.onrender.com/ping"))
+                .timeout(Duration.ofSeconds(5))
+                .header("Content-Type", "application/json")
+                .header("User-Agent", "Java HttpClient")
+                .GET()
+                .build();
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         System.out.println("🛑 Stopping VK Bot...");
         isRunning = false;
+        if (scheduler!=null){
+            scheduler.shutdown();
+        }
         if (botThread != null) {
             botThread.interrupt();
         }
@@ -122,7 +152,7 @@ public class Bot implements ServletContextListener {
                 if (!messages.isEmpty()) {
                     for (Message message : messages) {
                         if (message.getText() != null) {
-                            if (message.getText().equals("Начать")) {
+                            if (message.getText().equalsIgnoreCase("Начать")) {
                                 studentGroup.put(message.getFromId(),new ArrayList<>());
                                 vk.messages()
                                         .send(actor)
@@ -149,7 +179,7 @@ public class Bot implements ServletContextListener {
                                         .randomId(random.nextInt(10000))
                                         .execute();
                             } 
-                            else if (message.getText().equals("мой универ")) {
+                            else if (message.getText().equalsIgnoreCase("мой универ")) {
                                 StringBuilder sb = new StringBuilder("Твои группы:\n");
                                 for (UniversityGroup group : studentGroup.get(message.getFromId())){
                                     sb.append(group.toString());
@@ -161,7 +191,7 @@ public class Bot implements ServletContextListener {
                                         .randomId(random.nextInt(10000))
                                         .execute();
 
-                            } else if (message.getText().equals("добавить группу")) {
+                            } else if (message.getText().equalsIgnoreCase("добавить группу")) {
                                 var groups = studentGroup.get(message.getFromId());
                                 var group = groups.get(groups.size()-1);
                                 if (group.getGroup()!=null)
@@ -181,7 +211,7 @@ public class Bot implements ServletContextListener {
                                             .execute();
 
                             }
-                             else if (Utils.testGroupOmsu(message.getText())) {
+                             else if (Utils.groupIdOmsu(message.getText())!=-1) {
                                  var groups = studentGroup.get(message.getFromId());
                                  var group = groups.get(groups.size()-1);
                                  if (group.getUniversity().equals("ОмГУ")) {
@@ -199,10 +229,21 @@ public class Bot implements ServletContextListener {
                                              .message("Неверная группа для "+group.getUniversity())
                                              .userId(message.getFromId())
                                              .randomId(random.nextInt(10000))
+                                             .keyboard(
+                                                     new Keyboard().setButtons(
+                                                             List.of(List.of(
+                                                                     new KeyboardButton().setAction(
+                                                                             new KeyboardButtonAction().setLabel("Добавить группу")
+                                                                                     .setType(TemplateActionTypeNames.TEXT)
+                                                                     )
+                                                             )
+                                                         )
+                                                     )
+                                             )
                                              .execute();
                                  }
                             }
-                             else if(Utils.testGroupOmstu(message.getText())){
+                             else if(Utils.getOmstuGroup(message.getText())!=null){
                                 var groups = studentGroup.get(message.getFromId());
                                 var group = groups.get(groups.size()-1);
                                 if (group.getUniversity().equals("ОмГТУ")){
@@ -220,10 +261,20 @@ public class Bot implements ServletContextListener {
                                             .message("Неверная группа для "+group.getUniversity())
                                             .userId(message.getFromId())
                                             .randomId(random.nextInt(10000))
+                                            .keyboard(new Keyboard().setButtons(
+                                                    List.of(
+                                                            List.of(
+                                                                    new KeyboardButton().setAction(
+                                                                            new KeyboardButtonAction().setLabel("Добавить группу")
+                                                                                    .setType(TemplateActionTypeNames.TEXT)
+                                                                    )
+                                                            )
+                                                    )
+                                            ))
                                             .execute();
                                 }
                             }
-                             else if (message.getText().equals("расписание на сегодня")){
+                             else if (message.getText().equalsIgnoreCase("расписание на сегодня")){
 
                             }
                         else {
@@ -241,8 +292,7 @@ public class Bot implements ServletContextListener {
                 // Обновляем TS
                 ts = vk.messages().getLongPollServer(actor).execute().getTs();
 
-                // Ждем 3 секунды
-                Thread.sleep(1000);
+                Thread.sleep(500);
 
             } catch (Exception e) {
                 Thread.sleep(10000); // Ждем 10 сек при ошибке

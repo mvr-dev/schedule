@@ -494,23 +494,22 @@ public class Utils {
             );
 
 
-    public static boolean testGroupOmsu(String group){
-        String regexOmSU = "^[А-ЯЁ]{3}-\\d{3}-О-\\d{2}$";
-        Pattern patternOmsu = Pattern.compile(regexOmSU);
-        return patternOmsu.matcher(group.toUpperCase()).matches();
-    }
-    public static boolean testGroupOmstu(String group){
-        String regexOmSTU = "^[А-ЯЁ]{3}-\\d{3}$";
-        Pattern patternOmstu = Pattern.compile(regexOmSTU);
-        return  patternOmstu.matcher(group.toUpperCase()).matches();
-    }
     public static Integer groupIdOmsu(String group){
         return groupsOmsu.getOrDefault(group,-1);
     }
     public static OmstuGroup getOmstuGroup(String group) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         String response = RequestUtil.getOmstuGroupJson(group);
-        return  objectMapper.readValue(response, new TypeReference<List<OmstuGroup>>() {}).get(0);
+        if (response==null){
+            return null;
+        }
+        List<OmstuGroup> groups = objectMapper.readValue(response, new TypeReference<List<OmstuGroup>>() {});
+        if (groups.isEmpty()){
+            return null;
+        }
+        else{
+            return groups.get(0);
+        }
 
     }
 }
