@@ -9,13 +9,13 @@ import java.util.Date;
 
 @WebServlet("/ping")
 public class PingServlet extends HttpServlet {
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
             resp.setContentType("text/plain");
             resp.getWriter().write("pong - " + new Date());
-            System.out.println("🏓 Ping received at " + new Date());
         } catch (Exception e) {
-            e.printStackTrace();
+            resp.setStatus(500);
         }
     }
 }

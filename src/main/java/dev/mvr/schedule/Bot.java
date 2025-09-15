@@ -11,8 +11,14 @@ import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
 import dev.mvr.schedule.model.UniversityGroup;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -23,8 +29,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@WebListener
-public class Bot implements ServletContextListener {
+@WebServlet("vk-bot")
+public class Bot extends HttpServlet implements ServletContextListener {
 
     private Thread botThread;
     private boolean isRunning = false;
@@ -35,9 +41,6 @@ public class Bot implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("🚀 Starting VK Bot...");
         isRunning = true;
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::keepAlivePing, 0, 45, TimeUnit.SECONDS);
-
 
         // ЗАПУСКАЕМ бота в отдельном потоке
         botThread = new Thread(() -> {
@@ -52,26 +55,17 @@ public class Bot implements ServletContextListener {
         System.out.println("✅ Bot thread started");
     }
 
-    private void keepAlivePing() {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(3))
-                .build();
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create("https://schedule-derw.onrender.com/ping"))
-                .timeout(Duration.ofSeconds(20))
-                .header("Content-Type", "application/json")
-                .header("User-Agent", "Java HttpClient")
-                .GET()
-                .build();
-        try {
-            HttpResponse<String> response = httpClient.send(
-                    httpRequest, HttpResponse.BodyHandlers.ofString());
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+            try {
+                resp.setContentType("text/plain");
+                resp.getWriter().write("VK Bot is running! " + new Date() +
+                        "\nActive users: " + studentGroup.size());
+            } catch (Exception e) {
+                resp.setStatus(500);
+            }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
-
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
@@ -299,4 +293,5 @@ public class Bot implements ServletContextListener {
             }
         }
     }
+
 }
