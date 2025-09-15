@@ -14,6 +14,7 @@ import dev.mvr.schedule.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public class VkBotService implements Runnable{
@@ -136,16 +137,19 @@ public class VkBotService implements Runnable{
                                     else
                                         vk.messages()
                                                 .send(actor)
-                                                .message("Введи номер группы")
+                                                .message(Objects.equals(group.getGroup(), "ОмГУ") ?
+                                                                "Введи номер группы (полностью)\n например: ХХБ-001-О-01"
+                                                        : "Введи номер группы")
                                                 .userId(message.getFromId())
                                                 .randomId(random.nextInt(10000))
                                                 .execute();
 
                                 } else if (Utils.groupIdOmsu(message.getText()) != -1) {
+                                    System.out.println("Group for OmSU: "+message.getText());
                                     var groups = StudentRepository.getStudentGroups(message.getFromId());
                                     var group = groups.get(groups.size() - 1);
                                     if (group.getUniversity().equals("ОмГУ")) {
-                                        group.setGroup(message.getText());
+                                        group.setGroup(message.getText().toUpperCase());
                                         vk.messages()
                                                 .send(actor)
                                                 .message("Группа добавлена")
@@ -172,7 +176,7 @@ public class VkBotService implements Runnable{
                                                 )
                                                 .execute();
                                     }
-                                } else if (Utils.getOmstuGroup(message.getText()) != null) {
+                                } else if (Utils.getOmstuGroup(message.getText().toUpperCase()) != null) {
                                     var groups = StudentRepository.getStudentGroups(message.getFromId());
                                     var group = groups.get(groups.size() - 1);
                                     if (group.getUniversity().equals("ОмГТУ")) {
