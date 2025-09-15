@@ -1,4 +1,4 @@
-package dev.mvr.schedule;
+package dev.mvr.schedule.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -7,7 +7,6 @@ import dev.mvr.schedule.model.OmstuGroup;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class Utils {
     public  static Map<String, Integer> groupsOmsu = Map.ofEntries(

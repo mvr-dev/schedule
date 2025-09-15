@@ -1,7 +1,6 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-import dev.mvr.schedule.Bot;
-import dev.mvr.schedule.RequestUtil;
-import dev.mvr.schedule.Utils;
+import dev.mvr.schedule.utils.RequestUtil;
+import dev.mvr.schedule.utils.Utils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

@@ -1,4 +1,4 @@
-package dev.mvr.schedule;
+package dev.mvr.schedule.service;
 
 import com.vk.api.sdk.client.TransportClient;
 import com.vk.api.sdk.client.VkApiClient;
@@ -9,77 +9,17 @@ import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.*;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
 import dev.mvr.schedule.model.UniversityGroup;
-import jakarta.servlet.ServletContextEvent;
-import jakarta.servlet.ServletContextListener;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebListener;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import dev.mvr.schedule.repository.StudentRepository;
+import dev.mvr.schedule.utils.Utils;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
-@WebServlet("vk-bot")
-public class Bot extends HttpServlet implements ServletContextListener {
-
-    private Thread botThread;
-    private boolean isRunning = false;
-    Map<Integer, List<UniversityGroup>> studentGroup = new HashMap<>();
-    private ScheduledExecutorService scheduler;
+public class VkBotService implements Runnable{
 
     @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("🚀 Starting VK Bot...");
-        isRunning = true;
-
-        // ЗАПУСКАЕМ бота в отдельном потоке
-        botThread = new Thread(() -> {
-            try {
-                runBot();
-            } catch (Exception e) {
-                System.out.println("❌ Bot crashed: " + e.getMessage());
-            }
-        });
-
-        botThread.start();
-        System.out.println("✅ Bot thread started");
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            try {
-                resp.setContentType("text/plain");
-                resp.getWriter().write("VK Bot is running! " + new Date() +
-                        "\nActive users: " + studentGroup.size());
-            } catch (Exception e) {
-                resp.setStatus(500);
-            }
-
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("🛑 Stopping VK Bot...");
-        isRunning = false;
-        if (scheduler!=null){
-            scheduler.shutdown();
-        }
-        if (botThread != null) {
-            botThread.interrupt();
-        }
-    }
-
-    public void runBot() throws ClientException, ApiException, InterruptedException {
+    public void run() {
 
         TransportClient transportClient = new HttpTransportClient();
         VkApiClient vk = new VkApiClient(transportClient);
@@ -99,19 +39,26 @@ public class Bot extends HttpServlet implements ServletContextListener {
             return;
         }
 
-        Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
+        Integer ts = null;
+        try {
+            ts = vk.messages().getLongPollServer(actor).execute().getTs();
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        } catch (ClientException e) {
+            throw new RuntimeException(e);
+        }
         Random random = new Random();
         Keyboard universityKeyboard = new Keyboard();
         List<List<KeyboardButton>> universities = new ArrayList<>();
         List<KeyboardButton> line1 = List.of(
                 new KeyboardButton().setAction(
-                new KeyboardButtonAction().setLabel("ОмГУ")
-                        .setType(TemplateActionTypeNames.TEXT)
-        ),
+                        new KeyboardButtonAction().setLabel("ОмГУ")
+                                .setType(TemplateActionTypeNames.TEXT)
+                ),
                 new KeyboardButton().setAction(
-                new KeyboardButtonAction().setLabel("ОмГТУ")
-                        .setType(TemplateActionTypeNames.TEXT)
-        ));
+                        new KeyboardButtonAction().setLabel("ОмГТУ")
+                                .setType(TemplateActionTypeNames.TEXT)
+                ));
         universities.add(line1);
         universityKeyboard.setButtons(universities);
 
@@ -136,7 +83,7 @@ public class Bot extends HttpServlet implements ServletContextListener {
         );
 
 
-        while (isRunning) {
+        while (true) {
             try {
                 MessagesGetLongPollHistoryQuery historyQuery =
                         vk.messages().getLongPollHistory(actor).ts(ts);
@@ -147,7 +94,7 @@ public class Bot extends HttpServlet implements ServletContextListener {
                     for (Message message : messages) {
                         if (message.getText() != null) {
                             if (message.getText().equalsIgnoreCase("Начать")) {
-                                studentGroup.put(message.getFromId(),new ArrayList<>());
+                                StudentRepository.addStudent(message.getFromId());
                                 vk.messages()
                                         .send(actor)
                                         .message("Привет! Выбери университет")
@@ -156,7 +103,7 @@ public class Bot extends HttpServlet implements ServletContextListener {
                                         .keyboard(universityKeyboard)
                                         .execute();
                             } else if (message.getText().equals("ОмГУ")) {
-                                studentGroup.get(message.getFromId()).add(new UniversityGroup("ОмГУ"));
+                                StudentRepository.addGroup(message.getFromId(), new UniversityGroup("ОмГУ"));
                                 vk.messages()
                                         .send(actor)
                                         .message("Введи номер группы (полностью)\n например: ХХБ-001-О-01")
@@ -165,18 +112,19 @@ public class Bot extends HttpServlet implements ServletContextListener {
                                         .execute();
                             }
                             else if( message.getText().equals("ОмГТУ")) {
-                                studentGroup.get(message.getFromId()).add(new UniversityGroup("ОмГТУ"));
+                                StudentRepository.addGroup(message.getFromId(), new UniversityGroup("ОмГТУ"));
                                 vk.messages()
                                         .send(actor)
                                         .message("Введи номер группы")
                                         .userId(message.getFromId())
                                         .randomId(random.nextInt(10000))
                                         .execute();
-                            } 
+                            }
                             else if (message.getText().equalsIgnoreCase("мой универ")) {
                                 StringBuilder sb = new StringBuilder("Твои группы:\n");
-                                for (UniversityGroup group : studentGroup.get(message.getFromId())){
+                                for (UniversityGroup group : StudentRepository.getStudentGroups(message.getFromId())){
                                     sb.append(group.toString());
+                                    sb.append('\n');
                                 }
                                 vk.messages()
                                         .send(actor)
@@ -186,7 +134,7 @@ public class Bot extends HttpServlet implements ServletContextListener {
                                         .execute();
 
                             } else if (message.getText().equalsIgnoreCase("добавить группу")) {
-                                var groups = studentGroup.get(message.getFromId());
+                                var groups = StudentRepository.getStudentGroups(message.getFromId());
                                 var group = groups.get(groups.size()-1);
                                 if (group.getGroup()!=null)
                                     vk.messages()
@@ -205,40 +153,41 @@ public class Bot extends HttpServlet implements ServletContextListener {
                                             .execute();
 
                             }
-                             else if (Utils.groupIdOmsu(message.getText())!=-1) {
-                                 var groups = studentGroup.get(message.getFromId());
-                                 var group = groups.get(groups.size()-1);
-                                 if (group.getUniversity().equals("ОмГУ")) {
-                                     group.setGroup(message.getText());
-                                     vk.messages()
-                                             .send(actor)
-                                             .message("Группа добавлена")
-                                             .userId(message.getFromId())
-                                             .randomId(random.nextInt(10000))
-                                             .execute();
-                                 }
-                                 else{
-                                     vk.messages()
-                                             .send(actor)
-                                             .message("Неверная группа для "+group.getUniversity())
-                                             .userId(message.getFromId())
-                                             .randomId(random.nextInt(10000))
-                                             .keyboard(
-                                                     new Keyboard().setButtons(
-                                                             List.of(List.of(
-                                                                     new KeyboardButton().setAction(
-                                                                             new KeyboardButtonAction().setLabel("Добавить группу")
-                                                                                     .setType(TemplateActionTypeNames.TEXT)
-                                                                     )
-                                                             )
-                                                         )
-                                                     )
-                                             )
-                                             .execute();
-                                 }
+                            else if (Utils.groupIdOmsu(message.getText())!=-1) {
+                                var groups = StudentRepository.getStudentGroups(message.getFromId());
+                                var group = groups.get(groups.size()-1);
+                                if (group.getUniversity().equals("ОмГУ")) {
+                                    group.setGroup(message.getText());
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Группа добавлена")
+                                            .userId(message.getFromId())
+                                            .keyboard(actionsKeyboard)
+                                            .randomId(random.nextInt(10000))
+                                            .execute();
+                                }
+                                else{
+                                    vk.messages()
+                                            .send(actor)
+                                            .message("Неверная группа для "+group.getUniversity())
+                                            .userId(message.getFromId())
+                                            .randomId(random.nextInt(10000))
+                                            .keyboard(
+                                                    new Keyboard().setButtons(
+                                                            List.of(List.of(
+                                                                            new KeyboardButton().setAction(
+                                                                                    new KeyboardButtonAction().setLabel("Добавить группу")
+                                                                                            .setType(TemplateActionTypeNames.TEXT)
+                                                                            )
+                                                                    )
+                                                            )
+                                                    )
+                                            )
+                                            .execute();
+                                }
                             }
-                             else if(Utils.getOmstuGroup(message.getText())!=null){
-                                var groups = studentGroup.get(message.getFromId());
+                            else if(Utils.getOmstuGroup(message.getText())!=null){
+                                var groups = StudentRepository.getStudentGroups(message.getFromId());
                                 var group = groups.get(groups.size()-1);
                                 if (group.getUniversity().equals("ОмГТУ")){
                                     group.setGroup(message.getText());
@@ -268,10 +217,10 @@ public class Bot extends HttpServlet implements ServletContextListener {
                                             .execute();
                                 }
                             }
-                             else if (message.getText().equalsIgnoreCase("расписание на сегодня")){
+                            else if (message.getText().equalsIgnoreCase("расписание на сегодня")){
 
                             }
-                        else {
+                            else {
                                 vk.messages()
                                         .send(actor)
                                         .message("Я вас не понял")
@@ -289,9 +238,12 @@ public class Bot extends HttpServlet implements ServletContextListener {
                 Thread.sleep(500);
 
             } catch (Exception e) {
-                Thread.sleep(10000); // Ждем 10 сек при ошибке
+                try {
+                    Thread.sleep(10000); // Ждем 10 сек при ошибке
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }
-
 }

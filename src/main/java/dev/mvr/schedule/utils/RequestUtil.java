@@ -1,4 +1,4 @@
-package dev.mvr.schedule;
+package dev.mvr.schedule.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.mvr.schedule.model.OmstuGroup;

@@ -36,7 +36,7 @@ public class KeepAliveServlet extends HttpServlet {
 
     private void pingServer() {
         try {
-            URL url = new URL("https://your-app.onrender.com/ping");
+            URL url = new URL("https://schedule-derw.onrender.com/ping");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000);
