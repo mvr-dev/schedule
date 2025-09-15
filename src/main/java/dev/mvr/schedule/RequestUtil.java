@@ -19,7 +19,7 @@ public class RequestUtil {
         if ((v=cache.get(group))!=null)
             return v;
         HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(10))
+                .connectTimeout(Duration.ofSeconds(30))
                 .build();
 
         HttpRequest request = HttpRequest.newBuilder()

@@ -58,7 +58,7 @@ public class Bot implements ServletContextListener {
                 .build();
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://schedule-derw.onrender.com/ping"))
-                .timeout(Duration.ofSeconds(5))
+                .timeout(Duration.ofSeconds(20))
                 .header("Content-Type", "application/json")
                 .header("User-Agent", "Java HttpClient")
                 .GET()
