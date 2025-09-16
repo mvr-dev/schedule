@@ -147,9 +147,13 @@ public class VkBotService implements Runnable{
                                 } else if (Utils.groupIdOmsu(message.getText()) != -1) {
                                     System.out.println("Group for OmSU: "+message.getText());
                                     var groups = StudentRepository.getStudentGroups(message.getFromId());
+                                    System.out.println("get omsu student groups");
                                     var group = groups.get(groups.size() - 1);
+                                    System.out.println("get lst group"+group);
                                     if (group.getUniversity().equals("ОмГУ")) {
+                                        System.out.println("university group is omsu");
                                         group.setGroup(message.getText().toUpperCase());
+                                        System.out.println("set this group");
                                         vk.messages()
                                                 .send(actor)
                                                 .message("Группа добавлена")
@@ -157,24 +161,27 @@ public class VkBotService implements Runnable{
                                                 .keyboard(actionsKeyboard)
                                                 .randomId(random.nextInt(10000))
                                                 .execute();
+                                        System.out.println("send message");
                                     } else {
+                                        System.out.println("this group is not omsu");
                                         vk.messages()
                                                 .send(actor)
                                                 .message("Неверная группа для " + group.getUniversity())
                                                 .userId(message.getFromId())
                                                 .randomId(random.nextInt(10000))
-                                                .keyboard(
-                                                        new Keyboard().setButtons(
-                                                                List.of(List.of(
-                                                                                new KeyboardButton().setAction(
-                                                                                        new KeyboardButtonAction().setLabel("Добавить группу")
-                                                                                                .setType(TemplateActionTypeNames.TEXT)
-                                                                                )
-                                                                        )
-                                                                )
-                                                        )
-                                                )
+//                                                .keyboard(
+////                                                        new Keyboard().setButtons(
+////                                                                List.of(List.of(
+////                                                                                new KeyboardButton().setAction(
+////                                                                                        new KeyboardButtonAction().setLabel("Добавить группу")
+////                                                                                                .setType(TemplateActionTypeNames.TEXT)
+////                                                                                )
+////                                                                        )
+////                                                                )
+////                                                        )
+//                                                )
                                                 .execute();
+                                        System.out.println("send message");
                                     }
                                 } else if (Utils.getOmstuGroup(message.getText().toUpperCase()) != null) {
                                     var groups = StudentRepository.getStudentGroups(message.getFromId());
