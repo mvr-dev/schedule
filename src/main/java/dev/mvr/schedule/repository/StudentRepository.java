@@ -11,7 +11,7 @@ public class StudentRepository {
     private static Map<Integer, List<UniversityGroup>> studentGroup = new HashMap<>();
 
     public static List<UniversityGroup> getStudentGroups(int id){
-        return studentGroup.get(id);
+        return studentGroup.getOrDefault(id,new ArrayList<>());
     }
     public static void addGroup(int studentId, UniversityGroup universityGroup){
         studentGroup.getOrDefault(studentId,new ArrayList<>()).add(universityGroup);
