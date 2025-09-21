@@ -3,6 +3,7 @@ package dev.mvr.schedule.model;
 import java.util.Objects;
 
 public class OmstuGroup {
+    //[{"id":541, "label":"ПРД-231", "description":"Машиностроительный институт | Дневная", "type":"group"}
     private long id;
     private String label;
     private String description;

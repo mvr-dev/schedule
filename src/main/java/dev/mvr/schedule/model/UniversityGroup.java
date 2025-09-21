@@ -46,7 +46,9 @@ public class UniversityGroup {
 
     @Override
     public String toString() {
-        return String.format("%s, %s",university,group);
+        return
+                "{Университет: " + university  +
+                ", Группа: " + group  +
+                '}';
     }
-
 }
