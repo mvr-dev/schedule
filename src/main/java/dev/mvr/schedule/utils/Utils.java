@@ -82,6 +82,10 @@ public class Utils {
         }
     }
 
+    public static boolean isOmstuPattern(String group){
+        String regex = "^[А-ЯЁ]{3}-\\d{3}$";
+        return group.matches(regex);
+    }
 
 
 }

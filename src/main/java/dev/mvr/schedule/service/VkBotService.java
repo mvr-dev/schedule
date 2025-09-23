@@ -28,7 +28,8 @@ public class VkBotService implements Runnable{
             TransportClient transportClient = new HttpTransportClient();
             VkApiClient vk = new VkApiClient(transportClient);
 
-
+            String token = System.getenv("VK_BOT_TOKEN");
+            Integer groupId = Integer.parseInt(System.getenv("VK_GROUP_ID"));
 
             GroupActor actor = new GroupActor(groupId, token);
             Integer ts = vk.messages().getLongPollServer(actor).execute().getTs();
@@ -80,7 +81,6 @@ public class VkBotService implements Runnable{
                                     } else {
                                         todayLessons = schedule.get(index);
                                     }
-
                                     vk.messages()
                                             .send(actor)
                                             .message(String.format("Расписание для %s\n\n%s", groupName, todayLessons.toString()))
@@ -215,6 +215,15 @@ public class VkBotService implements Runnable{
                                         var group = groups.get(groups.size() - 1);
                                         if (group.getUniversity().equals("ОмГУ")) {
                                             group.setGroup(message.getText().toUpperCase());
+                                            if(actionsKeyboard.getButtons().size()<9){
+                                                actionsKeyboard.getButtons().add(List.of(
+                                                        new KeyboardButton().setAction(
+                                                                new KeyboardButtonAction().setLabel(
+                                                                        "Расписание для "+message.getText().toUpperCase()
+                                                                ).setType(TemplateActionTypeNames.TEXT)
+                                                        )
+                                                ));
+                                            }
                                             vk.messages()
                                                     .send(actor)
                                                     .message("Группа добавлена")
@@ -224,11 +233,20 @@ public class VkBotService implements Runnable{
                                                     .execute();
                                         }
                                     }
-                                    else if (Utils.getOmstuGroup(message.getText().toUpperCase()) != null) {
+                                    else if (Utils.isOmstuPattern(message.getText().toUpperCase())) {
                                         var groups = StudentRepository.getStudentGroups(message.getFromId());
                                         var group = groups.get(groups.size() - 1);
                                         if (group.getUniversity().equals("ОмГТУ")) {
                                             group.setGroup(message.getText());
+                                            if(actionsKeyboard.getButtons().size()<9){
+                                                actionsKeyboard.getButtons().add(List.of(
+                                                        new KeyboardButton().setAction(
+                                                                new KeyboardButtonAction().setLabel(
+                                                                        "Расписание для "+message.getText().toUpperCase()
+                                                                ).setType(TemplateActionTypeNames.TEXT)
+                                                        )
+                                                ));
+                                            }
                                             vk.messages()
                                                     .send(actor)
                                                     .message("Группа добавлена")
@@ -318,19 +336,19 @@ public class VkBotService implements Runnable{
                                 new KeyboardButton().setAction(
                                         new KeyboardButtonAction()
                                                 .setLabel("<-")
-                                                .setType(TemplateActionTypeNames.CALLBACK)
+                                                .setType(TemplateActionTypeNames.TEXT)
                                                 .setPayload(createPayload("prev_day", groupName, date, false))
                                 ),
                                 new KeyboardButton().setAction(
                                         new KeyboardButtonAction()
                                                 .setLabel("Сегодня")
-                                                .setType(TemplateActionTypeNames.CALLBACK)
+                                                .setType(TemplateActionTypeNames.TEXT)
                                                 .setPayload(createPayload("today", groupName, date, true))
                                 ),
                                 new KeyboardButton().setAction(
                                         new KeyboardButtonAction()
                                                 .setLabel("->")
-                                                .setType(TemplateActionTypeNames.CALLBACK)
+                                                .setType(TemplateActionTypeNames.TEXT)
                                                 .setPayload(createPayload("next_day", groupName, date, false))
                                 )
                         )

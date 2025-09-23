@@ -29,12 +29,12 @@ public class Tests {
 //    public void testOmsuSchedule(){
 //        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",true));
 //    }
-//    @Test
-//    public void testGetToday(){
-////        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false).get(Utils.getIndexOfTodayInOmsuScheduleList("ММБ-301-О-02")).getDay());
-//        var ind = Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.of(2025,9,22));
-//        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false).get(ind));
-//    }
+    @Test
+    public void testGetToday(){
+//        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false).get(Utils.getIndexOfTodayInOmsuScheduleList("ММБ-301-О-02")).getDay());
+        var ind = Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.of(2025,9,23));
+        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false).get(ind));
+    }
 //    @Test
 //    public void getSchedule() {
 //        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02", true));
