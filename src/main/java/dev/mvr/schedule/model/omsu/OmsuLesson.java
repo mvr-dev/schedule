@@ -1,6 +1,5 @@
-package dev.mvr.schedule.model;
+package dev.mvr.schedule.model.omsu;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;

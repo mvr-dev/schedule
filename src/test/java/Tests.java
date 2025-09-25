@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 
+import static dev.mvr.schedule.utils.Utils.getOmstuGroup;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -45,4 +46,21 @@ public class Tests {
 //                .get(Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.now()))
 //                .getDay().equals(LocalDate.now()));
 //    }
+    @Test
+    public void testOmstu(){
+        System.out.println(RequestUtil.getOmstuLessons("ПРД-231",LocalDate.now()));
+    }
+    @Test
+    public void yyyy(){
+        LocalDate begin = LocalDate.now();
+        System.out.println(String.format("https://rasp.omgtu.ru/api/schedule/group/%d?start=%d.%02d.%02d&finish=%d.%02d.%02d",
+                RequestUtil.getOmstuGroup("ПРД-231").getId(),
+                begin.getYear(),
+                begin.getMonthValue(),
+                begin.getDayOfMonth(),
+                begin.plusDays(7).getYear(),
+                begin.plusDays(7).getMonthValue(),
+                begin.plusDays(7).getDayOfMonth()
+        ));
+    }
 }

@@ -1,9 +1,8 @@
-package dev.mvr.schedule.model;
+package dev.mvr.schedule.model.omsu;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 public class OmsuSchedule implements Comparable<OmsuSchedule> {

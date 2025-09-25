@@ -6,8 +6,8 @@ import com.vk.api.sdk.client.actors.GroupActor;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.*;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
-import dev.mvr.schedule.model.OmsuLesson;
-import dev.mvr.schedule.model.OmsuSchedule;
+import dev.mvr.schedule.model.omsu.OmsuLesson;
+import dev.mvr.schedule.model.omsu.OmsuSchedule;
 import dev.mvr.schedule.model.Payload;
 import dev.mvr.schedule.model.UniversityGroup;
 import dev.mvr.schedule.repository.StudentRepository;
@@ -15,10 +15,7 @@ import dev.mvr.schedule.utils.RequestUtil;
 import dev.mvr.schedule.utils.Utils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public class VkBotService implements Runnable{
 
@@ -37,12 +34,14 @@ public class VkBotService implements Runnable{
             Random random = new Random();
             Keyboard universityKeyboard = createUniversityKeyboard();
             Keyboard actionsKeyboard = createActionsKeyboard();
+            Map<String,Integer> scheduleMessageLastId = new HashMap<>();
 
             while (true) {
                 try {
                     MessagesGetLongPollHistoryQuery historyQuery =
                             vk.messages().getLongPollHistory(actor).ts(ts);
                     List<Message> messages = historyQuery.execute().getMessages().getItems();
+//                    vk.messages().getLongPollHistory(actor).ts(ts).execute().getHistory().
 
                     if (!messages.isEmpty()) {
                         for (Message message : messages) {
@@ -81,19 +80,32 @@ public class VkBotService implements Runnable{
                                     } else {
                                         todayLessons = schedule.get(index);
                                     }
-                                    vk.messages()
+//                                    System.out.printl;
+                                    vk.messages().delete(actor)
+                                            .groupId(groupId) // ID группы должен быть положительным
+                                            .peerId(message.getPeerId())
+                                            .messageIds(scheduleMessageLastId.get(groupName)) // Удаляем текущее сообщение
+                                            .deleteForAll(true) // Важно: удалить для всех
+                                            .execute();
+                                    Integer id = vk.messages()
                                             .send(actor)
                                             .message(String.format("Расписание для %s\n\n%s", groupName, todayLessons.toString()))
                                             .userId(message.getFromId())
                                             .randomId(random.nextInt(10000))
                                             .keyboard(createNavigationKeyboard(groupName, day))
                                             .execute();
-
-                                    continue; // Пропускаем обработку текста
+                                    var msg = scheduleMessageLastId.get(groupName);
+                                    if (msg==null){
+                                        scheduleMessageLastId.put(groupName,id);
+                                    }
+                                    else{
+                                        scheduleMessageLastId.replace(groupName,id);
+                                    }
+//                                    continue; // Пропускаем обработку текста
                                 }
 
                                 // Обработка текстовых сообщений
-                                if (message.getText() != null) {
+                                else if (message.getText() != null) {
                                     System.out.println("Text message: " + message.getText());
 
                                     if (message.getText().equalsIgnoreCase("Начать")) {
@@ -175,14 +187,20 @@ public class VkBotService implements Runnable{
                                             } else {
                                                 todayLessons = schedule.get(index);
                                             }
-
-                                            vk.messages()
+                                            Integer id = vk.messages()
                                                     .send(actor)
                                                     .message(String.format("Расписание для %s\n\n%s", group.getGroup(), todayLessons.toString()))
                                                     .userId(message.getFromId())
                                                     .randomId(random.nextInt(10000))
                                                     .keyboard(createNavigationKeyboard(group.getGroup(), day))
                                                     .execute();
+                                            var msg = scheduleMessageLastId.get(group.getGroup());
+                                            if (msg==null){
+                                                scheduleMessageLastId.put(group.getGroup(),id);
+                                            }
+                                            else{
+                                                scheduleMessageLastId.replace(group.getGroup(),id);
+                                            }
                                         }
                                     }
                                     else if (message.getText().equalsIgnoreCase("добавить группу")) {

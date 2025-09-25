@@ -6,11 +6,16 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dev.mvr.schedule.model.*;
-import dev.mvr.schedule.repository.StudentRepository;
+import dev.mvr.schedule.model.omstu.OmstuGroup;
+import dev.mvr.schedule.model.omstu.OmstuLesson;
+import dev.mvr.schedule.model.omstu.OmstuSchedule;
+import dev.mvr.schedule.model.omsu.OmsuGroup;
+import dev.mvr.schedule.model.omsu.OmsuLesson;
+import dev.mvr.schedule.model.omsu.OmsuResponse;
+import dev.mvr.schedule.model.omsu.OmsuSchedule;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public class Utils {
 
@@ -23,13 +28,12 @@ public class Utils {
         }
         return -1;
     }
-    public static OmstuGroup getOmstuGroup(String group) throws JsonProcessingException {
+    public static OmstuGroup getOmstuGroup(String json) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        String response = RequestUtil.getOmstuGroupJson(group);
-        if (response==null){
+        if (json==null){
             return null;
         }
-        List<OmstuGroup> groups = objectMapper.readValue(response, new TypeReference<List<OmstuGroup>>() {});
+        List<OmstuGroup> groups = objectMapper.readValue(json, new TypeReference<List<OmstuGroup>>() {});
         if (groups.isEmpty()){
             return null;
         }
@@ -85,6 +89,14 @@ public class Utils {
     public static boolean isOmstuPattern(String group){
         String regex = "^[А-ЯЁ]{3}-\\d{3}$";
         return group.matches(regex);
+    }
+    public static List<OmstuLesson> parseOmstuLessons(String response) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        return objectMapper.readValue(response, new TypeReference<List<OmstuLesson>>() {});
+    }
+
+    public static boolean inInterval(LocalDate begin,LocalDate test,LocalDate end){
+        return test.equals(begin) || test.equals(end) || (test.isBefore(end) && test.isAfter(begin));
     }
 
 

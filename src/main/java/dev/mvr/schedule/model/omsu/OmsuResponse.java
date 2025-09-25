@@ -1,4 +1,4 @@
-package dev.mvr.schedule.model;
+package dev.mvr.schedule.model.omsu;
 
 import java.util.List;
 
