@@ -115,6 +115,10 @@ public class RequestUtil {
     }
 
     public static List<OmstuLesson> getOmstuLessons(String group,LocalDate begin){
+        var gr = cacheOmstuSchedule.get(group);
+        if(gr!=null && gr.containsDay(begin) && !gr.getLessons(begin).isEmpty()){
+            return gr.getLessons(begin);
+        }
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
@@ -137,15 +141,14 @@ public class RequestUtil {
                 .header("User-Agent", "Java HttpClient")
                 .GET()
                 .build();
-        var gr = cacheOmstuSchedule.get(group);
-        if(gr!=null && (Utils.inInterval(begin,gr.getBegin(),begin.plusDays(7)))){
-            return gr.getLessons();
-        }
         try{
             HttpResponse<String> response =
                     client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             var schedules = Utils.parseOmstuLessons(response.body());
-            cacheOmstuSchedule.put(group,new OmstuScheduleCache(begin,begin.plusDays(7),schedules));
+//            cacheOmstuSchedule.put(group,new OmstuScheduleCache(begin,begin.plusDays(7),schedules));
+            for(OmstuLesson lesson: schedules){
+                cacheOmstuSchedule.getOrDefault(group,new OmstuScheduleCache(new HashMap<>())).addByDate(lesson.getDate(),lesson);
+            }
             return schedules;
 
         } catch (Exception e) {

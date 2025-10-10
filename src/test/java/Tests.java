@@ -1,9 +1,11 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.mvr.schedule.model.omstu.OmstuLesson;
 import dev.mvr.schedule.utils.RequestUtil;
 import dev.mvr.schedule.utils.Utils;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 
 import static dev.mvr.schedule.utils.Utils.getOmstuGroup;
 import static org.junit.Assert.assertFalse;
@@ -36,19 +38,23 @@ public class Tests {
         var ind = Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.of(2025,9,23));
         System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false).get(ind));
     }
-//    @Test
-//    public void getSchedule() {
-//        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02", true));
-//    }
-//    @Test
-//    public void equalsToday(){
-//        assertFalse(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false)
-//                .get(Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.now()))
-//                .getDay().equals(LocalDate.now()));
-//    }
+    @Test
+    public void getSchedule() {
+        System.out.println(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02", true));
+    }
+    @Test
+    public void equalsToday(){
+        assertFalse(RequestUtil.getOmsuGroupSchedule("ММБ-301-О-02",false)
+                .get(Utils.getIndexOfDayInOmsuScheduleList("ММБ-301-О-02",LocalDate.now()))
+                .getDay().equals(LocalDate.now()));
+    }
     @Test
     public void testOmstu(){
-        System.out.println(RequestUtil.getOmstuLessons("ПРД-231",LocalDate.now()));
+        System.out.println(RequestUtil.getOmstuLessons("ПРД-231",LocalDate.now())
+                .stream()
+                .sorted(Comparator.comparing(OmstuLesson::getDate))
+                .toList()
+        );
     }
     @Test
     public void yyyy(){
@@ -62,5 +68,10 @@ public class Tests {
                 begin.plusDays(7).getMonthValue(),
                 begin.plusDays(7).getDayOfMonth()
         ));
+    }
+    @Test
+    public void tesy(){
+        System.out.println(Utils.omstuSchedulePerDay("ПРД-231",LocalDate.now().plusDays(1)));
+
     }
 }

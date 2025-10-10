@@ -2,13 +2,13 @@ package dev.mvr.schedule.model.omstu;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public class OmstuLesson {
-
-
+public class OmstuLesson implements Comparable<OmstuLesson> {
 
         @JsonProperty("SP_DisciplineInPlan_ID")
         private Integer spDisciplineInPlanId;
@@ -38,7 +38,8 @@ public class OmstuLesson {
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z00:00'")
         private LocalDateTime createddate;
 
-        private String date;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
+        private LocalDate date;
         private String dateOfNest;
         private Integer dayOfWeek;
         private String dayOfWeekString;
@@ -329,11 +330,11 @@ public class OmstuLesson {
             this.createddate = createddate;
         }
 
-        public String getDate() {
+        public LocalDate getDate() {
             return date;
         }
 
-        public void setDate(String date) {
+        public void setDate(LocalDate date) {
             this.date = date;
         }
 
@@ -1011,109 +1012,19 @@ public class OmstuLesson {
 
     @Override
     public String toString() {
-        return "OmstuLesson{" +
-                "spDisciplineInPlanId=" + spDisciplineInPlanId +
-                ", auditorium='" + auditorium + '\'' +
-                ", auditoriumAmount=" + auditoriumAmount +
-                ", auditoriumGuid=" + auditoriumGuid +
-                ", auditoriumOid=" + auditoriumOid +
-                ", auditoriumfloor=" + auditoriumfloor +
-                ", author='" + author + '\'' +
-                ", beginLesson='" + beginLesson + '\'' +
-                ", building='" + building + '\'' +
-                ", buildingGid=" + buildingGid +
-                ", buildingOid=" + buildingOid +
-                ", contentOfLoadOid=" + contentOfLoadOid +
-                ", contentOfLoadUid=" + contentOfLoadUid +
-                ", contentTableOfLessonsName='" + contentTableOfLessonsName + '\'' +
-                ", contentTableOfLessonsOid=" + contentTableOfLessonsOid +
-                ", courseContent=" + courseContent +
-                ", createddate=" + createddate +
-                ", date='" + date + '\'' +
-                ", dateOfNest='" + dateOfNest + '\'' +
-                ", dayOfWeek=" + dayOfWeek +
-                ", dayOfWeekString='" + dayOfWeekString + '\'' +
-                ", detailInfo='" + detailInfo + '\'' +
-                ", discipline='" + discipline + '\'' +
-                ", disciplineAsavUid=" + disciplineAsavUid +
-                ", disciplineMdmUid=" + disciplineMdmUid +
-                ", disciplineOid=" + disciplineOid +
-                ", disciplineUid=" + disciplineUid +
-                ", disciplineinplan='" + disciplineinplan + '\'' +
-                ", disciplinetypeload=" + disciplinetypeload +
-                ", duration=" + duration +
-                ", endLesson='" + endLesson + '\'' +
-                ", group='" + group + '\'' +
-                ", groupAsavUid=" + groupAsavUid +
-                ", groupGuid=" + groupGuid +
-                ", groupHrUid=" + groupHrUid +
-                ", groupMdmUid=" + groupMdmUid +
-                ", groupOid=" + groupOid +
-                ", groupSpUid=" + groupSpUid +
-                ", groupUid=" + groupUid +
-                ", group_facultyASAV_UID='" + group_facultyASAV_UID + '\'' +
-                ", group_facultyHR_UID='" + group_facultyHR_UID + '\'' +
-                ", group_facultyUID='" + group_facultyUID + '\'' +
-                ", groupFacultySpUid=" + groupFacultySpUid +
-                ", group_facultyname='" + group_facultyname + '\'' +
-                ", group_facultyoid=" + group_facultyoid +
-                ", hideincapacity=" + hideincapacity +
-                ", isBan=" + isBan +
-                ", kindOfWork='" + kindOfWork + '\'' +
-                ", kindOfWorkComplexity=" + kindOfWorkComplexity +
-                ", kindOfWorkOid=" + kindOfWorkOid +
-                ", kindOfWorkUid=" + kindOfWorkUid +
-                ", lecturer='" + lecturer + '\'' +
-                ", lecturerAsavUid=" + lecturerAsavUid +
-                ", lecturerCustomUid=" + lecturerCustomUid +
-                ", lecturerEmail='" + lecturerEmail + '\'' +
-                ", lecturerGuid=" + lecturerGuid +
-                ", lecturerMdmUid=" + lecturerMdmUid +
-                ", lecturerOid=" + lecturerOid +
-                ", lecturerUid=" + lecturerUid +
-                ", lecturerPostAsavUid=" + lecturerPostAsavUid +
-                ", lecturerPostMdmUid=" + lecturerPostMdmUid +
-                ", lecturerPostUid=" + lecturerPostUid +
-                ", lecturer_post_oid=" + lecturer_post_oid +
-                ", lecturer_rank='" + lecturer_rank + '\'' +
-                ", lecturer_title='" + lecturer_title + '\'' +
-                ", lessonNumberEnd=" + lessonNumberEnd +
-                ", lessonNumberStart=" + lessonNumberStart +
-                ", lessonOid=" + lessonOid +
-                ", listGroups=" + listGroups +
-                ", listOfLecturers=" + listOfLecturers +
-                ", listSubGroups=" + listSubGroups +
-                ", modifieddate=" + modifieddate +
-                ", note='" + note + '\'' +
-                ", note_description='" + note_description + '\'' +
-                ", openlesson=" + openlesson +
-                ", packageNumber=" + packageNumber +
-                ", parentSchedule_Status=" + parentSchedule_Status +
-                ", parentschedule='" + parentschedule + '\'' +
-                ", personHrPersonId=" + personHrPersonId +
-                ", personMdmPersonUid=" + personMdmPersonUid +
-                ", replaces='" + replaces + '\'' +
-                ", specializationContent='" + specializationContent + '\'' +
-                ", specialization_name='" + specialization_name + '\'' +
-                ", specialization_oid=" + specialization_oid +
-                ", stream='" + stream + '\'' +
-                ", streamOid=" + streamOid +
-                ", streamUid=" + streamUid +
-                ", stream_facultyoid=" + stream_facultyoid +
-                ", subGroup='" + subGroup + '\'' +
-                ", subGroupOid=" + subGroupOid +
-                ", subgroupGuid=" + subgroupGuid +
-                ", subgroupUid=" + subgroupUid +
-                ", subgroup_facultyoid=" + subgroup_facultyoid +
-                ", subgroup_groupOid=" + subgroup_groupOid +
-                ", subject='" + subject + '\'' +
-                ", tableofLessonsName='" + tableofLessonsName + '\'' +
-                ", tableofLessonsOid=" + tableofLessonsOid +
-                ", typeOfContingent=" + typeOfContingent +
-                ", url1='" + url1 + '\'' +
-                ", url1_description='" + url1_description + '\'' +
-                ", url2='" + url2 + '\'' +
-                ", url2_description='" + url2_description + '\'' +
-                "}\n";
+        return String.format(
+                "\uD83D\uDD70\uFE0F: %s\n\uD83D\uDCDA: %s\n\uD83D\uDC68\u200D\uD83C\uDFEB: %s\n\uD83C\uDFDB: %s\n№%d\n\n",
+                beginLesson+" - "+endLesson,
+                discipline,
+                lecturer,
+                auditorium,
+                contentTableOfLessonsOid
+                );
+    }
+
+
+    @Override
+    public int compareTo(OmstuLesson o) {
+        return this.getContentTableOfLessonsOid().compareTo(o.getContentTableOfLessonsOid());
     }
 }

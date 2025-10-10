@@ -8,6 +8,9 @@ public class Payload {
     @JsonProperty("action")
     private String action;
 
+    @JsonProperty("university")
+    private String university;
+
     @JsonProperty("group")
     private String group;
 
@@ -56,5 +59,13 @@ public class Payload {
 
     public void setNeedUpdate(boolean needUpdate) {
         this.needUpdate = needUpdate;
+    }
+
+    public String getUniversity() {
+        return university;
+    }
+
+    public void setUniversity(String university) {
+        this.university = university;
     }
 }

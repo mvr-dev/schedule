@@ -15,6 +15,8 @@ import dev.mvr.schedule.model.omsu.OmsuResponse;
 import dev.mvr.schedule.model.omsu.OmsuSchedule;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Utils {
@@ -92,11 +94,27 @@ public class Utils {
     }
     public static List<OmstuLesson> parseOmstuLessons(String response) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        return objectMapper.readValue(response, new TypeReference<List<OmstuLesson>>() {});
+        return objectMapper.readValue(response, new TypeReference<>() {
+        });
     }
 
     public static boolean inInterval(LocalDate begin,LocalDate test,LocalDate end){
         return test.equals(begin) || test.equals(end) || (test.isBefore(end) && test.isAfter(begin));
+    }
+    public static List<OmstuSchedule> omstuSchedulePerDay(String group,LocalDate begin){
+        var omstuScheduleList = RequestUtil.getOmstuLessons(group,begin).stream()
+                .sorted(Comparator.comparing(OmstuLesson::getDate))
+                .toList();
+        List<OmstuSchedule> schedules = new ArrayList<>();
+        for(OmstuLesson lesson: omstuScheduleList){
+            if(schedules.isEmpty() || !schedules.get(schedules.size()-1).getDate().equals(lesson.getDate())){
+                schedules.add(new OmstuSchedule(lesson.getDate(),new ArrayList<>(List.of(lesson))));
+            }
+            else {
+                schedules.get(schedules.size()-1).getLessons().add(lesson);
+            }
+        }
+        return schedules;
     }
 
 

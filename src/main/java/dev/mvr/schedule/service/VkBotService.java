@@ -6,6 +6,8 @@ import com.vk.api.sdk.client.actors.GroupActor;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
 import com.vk.api.sdk.objects.messages.*;
 import com.vk.api.sdk.queries.messages.MessagesGetLongPollHistoryQuery;
+import dev.mvr.schedule.model.omstu.OmstuLesson;
+import dev.mvr.schedule.model.omstu.OmstuSchedule;
 import dev.mvr.schedule.model.omsu.OmsuLesson;
 import dev.mvr.schedule.model.omsu.OmsuSchedule;
 import dev.mvr.schedule.model.Payload;
@@ -51,6 +53,7 @@ public class VkBotService implements Runnable{
                                 if (message.getPayload()!=null) {
                                     System.out.println("Processing payload: " + message.getPayload());
                                     Payload payload = Utils.parsePayload(message.getPayload());
+                                    String university = payload.getUniversity();
                                     String groupName = payload.getGroup();
                                     LocalDate day = LocalDate.parse(payload.getDate());
                                     boolean needUpdate = payload.isNeedUpdate();
@@ -65,20 +68,50 @@ public class VkBotService implements Runnable{
                                         day = LocalDate.now();
                                         needUpdate = true;
                                     }
+                                    Object todayLessons;
+                                    if (university.equals("ОмГУ")) {
 
-                                    // Получаем расписание
-                                    var schedule = RequestUtil.getOmsuGroupSchedule(groupName, needUpdate);
-                                    int index = Utils.getIndexOfDayInOmsuScheduleList(groupName, day);
-                                    OmsuSchedule todayLessons;
+                                        // Получаем расписание
+                                        var schedule = RequestUtil.getOmsuGroupSchedule(groupName, needUpdate);
+                                        int index = Utils.getIndexOfDayInOmsuScheduleList(groupName, day);
+//                                        OmsuSchedule todayLessons;
 
-                                    if (index >= schedule.size() || !schedule.get(index).getDay().equals(day)) {
-                                        todayLessons = new OmsuSchedule();
-                                        todayLessons.setDay(day);
-                                        OmsuLesson noLesson = new OmsuLesson();
-                                        noLesson.setLesson("Нет занятий");
-                                        todayLessons.setLessons(List.of(noLesson));
-                                    } else {
-                                        todayLessons = schedule.get(index);
+                                        if (index >= schedule.size() || !schedule.get(index).getDay().equals(day)) {
+                                            todayLessons = new OmsuSchedule();
+                                            ((OmsuSchedule) todayLessons).setDay(day);
+                                            OmsuLesson noLesson = new OmsuLesson();
+                                            noLesson.setLesson("Нет занятий");
+                                            ((OmsuSchedule) todayLessons).setLessons(List.of(noLesson));
+                                            ((OmsuSchedule) todayLessons).setDay(day);
+                                        } else {
+                                            todayLessons = schedule.get(index);
+                                        }
+                                    }
+                                    else {
+                                        var schedule = Utils.omstuSchedulePerDay(groupName, day.minusDays(1));
+                                        boolean f = false;
+                                        todayLessons = new OmstuSchedule();
+                                        System.out.println(day);
+                                        for(OmstuSchedule schedule1: schedule){
+                                            f |= schedule1.getDate().equals(day);
+                                            System.out.printf("{%s, %d}",schedule1.getDate(),schedule1.getLessons().size());
+
+                                        }
+                                        if (!f) {
+                                            ((OmstuSchedule) todayLessons).setDay(day);
+                                            OmstuLesson noLesson = new OmstuLesson();
+                                            noLesson.setDiscipline("Нет занятий");
+                                            ((OmstuSchedule) todayLessons).setLessons(List.of(noLesson));
+                                            ((OmstuSchedule) todayLessons).setDay(day);
+                                        }
+                                        else {
+                                            for(OmstuSchedule schedule1:schedule) {
+                                                if(schedule1.getDate().equals(day)) {
+                                                    todayLessons = schedule1;
+                                                    break;
+                                                }
+                                            }
+                                        }
                                     }
 //                                    System.out.printl;
                                     vk.messages().delete(actor)
@@ -92,7 +125,7 @@ public class VkBotService implements Runnable{
                                             .message(String.format("Расписание для %s\n\n%s", groupName, todayLessons.toString()))
                                             .userId(message.getFromId())
                                             .randomId(random.nextInt(10000))
-                                            .keyboard(createNavigationKeyboard(groupName, day))
+                                            .keyboard(createNavigationKeyboard(university,groupName, day))
                                             .execute();
                                     var msg = scheduleMessageLastId.get(groupName);
                                     if (msg==null){
@@ -165,6 +198,7 @@ public class VkBotService implements Runnable{
                                             }
                                         }
 
+                                        Object todayLessons = null;
                                         if (group==null){
                                             vk.messages()
                                                     .send(actor)
@@ -176,14 +210,12 @@ public class VkBotService implements Runnable{
                                         else if (group.getUniversity().equalsIgnoreCase("ОмГУ")){
                                             var schedule = RequestUtil.getOmsuGroupSchedule(thisGroup, needUpdate);
                                             int index = Utils.getIndexOfDayInOmsuScheduleList(group.getGroup(), day);
-                                            OmsuSchedule todayLessons;
-
                                             if (index >= schedule.size() || !schedule.get(index).getDay().equals(day)) {
                                                 todayLessons = new OmsuSchedule();
-                                                todayLessons.setDay(day);
+                                                ((OmsuSchedule) todayLessons).setDay(day);
                                                 OmsuLesson noLesson = new OmsuLesson();
                                                 noLesson.setLesson("Нет занятий");
-                                                todayLessons.setLessons(List.of(noLesson));
+                                                ((OmsuSchedule) todayLessons).setLessons(List.of(noLesson));
                                             } else {
                                                 todayLessons = schedule.get(index);
                                             }
@@ -192,7 +224,7 @@ public class VkBotService implements Runnable{
                                                     .message(String.format("Расписание для %s\n\n%s", group.getGroup(), todayLessons.toString()))
                                                     .userId(message.getFromId())
                                                     .randomId(random.nextInt(10000))
-                                                    .keyboard(createNavigationKeyboard(group.getGroup(), day))
+                                                    .keyboard(createNavigationKeyboard(group.getUniversity(),group.getGroup(), day))
                                                     .execute();
                                             var msg = scheduleMessageLastId.get(group.getGroup());
                                             if (msg==null){
@@ -202,7 +234,35 @@ public class VkBotService implements Runnable{
                                                 scheduleMessageLastId.replace(group.getGroup(),id);
                                             }
                                         }
+                                        else {
+                                            var schedule = Utils.omstuSchedulePerDay(group.getGroup(), LocalDate.now());
+                                            if (!day.equals(schedule.get(0).getDate())) {
+                                                todayLessons = new OmstuSchedule();
+                                                ((OmstuSchedule) todayLessons).setDay(day);
+                                                OmstuLesson noLesson = new OmstuLesson();
+                                                noLesson.setDiscipline("Нет занятий");
+                                                ((OmstuSchedule) todayLessons).setLessons(List.of(noLesson));
+                                            } 
+                                            else {
+                                                todayLessons = schedule.get(0);
+                                            }
+                                        }
+                                        Integer id = vk.messages()
+                                                .send(actor)
+                                                .message(String.format("Расписание для %s\n\n%s", group.getGroup(), todayLessons.toString()))
+                                                .userId(message.getFromId())
+                                                .randomId(random.nextInt(10000))
+                                                .keyboard(createNavigationKeyboard(group.getUniversity(),group.getGroup(), day))
+                                                .execute();
+                                        var msg = scheduleMessageLastId.get(group.getGroup());
+                                        if (msg==null){
+                                            scheduleMessageLastId.put(group.getGroup(),id);
+                                        }
+                                        else{
+                                            scheduleMessageLastId.replace(group.getGroup(),id);
+                                        }
                                     }
+                                    
                                     else if (message.getText().equalsIgnoreCase("добавить группу")) {
                                         var groups = StudentRepository.getStudentGroups(message.getFromId());
                                         UniversityGroup group;
@@ -347,7 +407,7 @@ public class VkBotService implements Runnable{
         return keyboard;
     }
 
-    private Keyboard createNavigationKeyboard(String groupName, LocalDate date) {
+    private Keyboard createNavigationKeyboard(String university,String groupName, LocalDate date) {
         return new Keyboard().setInline(true)
                 .setButtons(List.of(
                         List.of(
@@ -355,26 +415,26 @@ public class VkBotService implements Runnable{
                                         new KeyboardButtonAction()
                                                 .setLabel("<-")
                                                 .setType(TemplateActionTypeNames.TEXT)
-                                                .setPayload(createPayload("prev_day", groupName, date, false))
+                                                .setPayload(createPayload("prev_day", university ,groupName, date, false))
                                 ),
                                 new KeyboardButton().setAction(
                                         new KeyboardButtonAction()
                                                 .setLabel("Сегодня")
                                                 .setType(TemplateActionTypeNames.TEXT)
-                                                .setPayload(createPayload("today", groupName, date, true))
+                                                .setPayload(createPayload("today", university, groupName, date, true))
                                 ),
                                 new KeyboardButton().setAction(
                                         new KeyboardButtonAction()
                                                 .setLabel("->")
                                                 .setType(TemplateActionTypeNames.TEXT)
-                                                .setPayload(createPayload("next_day", groupName, date, false))
+                                                .setPayload(createPayload("next_day", university, groupName, date, false))
                                 )
                         )
                 ));
     }
 
-    private String createPayload(String action, String groupName, LocalDate date, boolean needUpdate) {
-        return String.format("{\"action\":\"%s\",\"group\":\"%s\",\"date\":\"%s\",\"need_update\":%b}",
-                action, groupName, date.toString(), needUpdate);
+    private String createPayload(String action, String university, String groupName, LocalDate date, boolean needUpdate) {
+        return String.format("{\"action\":\"%s\",\"university\":\"%s\",\"group\":\"%s\",\"date\":\"%s\",\"need_update\":%b}",
+                action, university, groupName, date.toString(), needUpdate);
     }
 }

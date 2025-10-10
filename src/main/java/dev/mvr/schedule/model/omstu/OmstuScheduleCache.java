@@ -1,28 +1,33 @@
 package dev.mvr.schedule.model.omstu;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class OmstuScheduleCache {
-    LocalDate begin;
-    LocalDate end;
-    List<OmstuLesson> lessons;
+    private Map<LocalDate, List<OmstuLesson>> dateToLessons;
 
-    public OmstuScheduleCache(LocalDate begin, LocalDate end, List<OmstuLesson> lessons) {
-        this.begin = begin;
-        this.end = end;
-        this.lessons = lessons;
+    public OmstuScheduleCache(Map<LocalDate, List<OmstuLesson>> dateToLessons) {
+        this.dateToLessons = dateToLessons;
     }
 
-    public LocalDate getBegin() {
-        return begin;
+    public  List<OmstuLesson> getByDate(LocalDate date){
+        return dateToLessons.get(date);
     }
-
-    public LocalDate getEnd() {
-        return end;
+    public void addByDate(LocalDate date, OmstuLesson lesson){
+        var a = dateToLessons.get(date);
+        if (a==null){
+            dateToLessons.put(date,new ArrayList<>(List.of(lesson)));
+        }
+        else{
+            a.add(lesson);
+        }
     }
-
-    public List<OmstuLesson> getLessons() {
-        return lessons;
+    public boolean containsDay(LocalDate date){
+        return dateToLessons.get(date)!=null;
+    }
+    public List<OmstuLesson> getLessons(LocalDate date){
+        return dateToLessons.getOrDefault(date,new ArrayList<>());
     }
 }
